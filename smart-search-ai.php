@@ -5,6 +5,8 @@
  * Description: Enhances WordPress search functionality using AI-driven relevance and click tracking.
  * Version: 1.1.0
  * Author: Sergey
+ * Tested up to: 6.8.3
+ * Text Domain: smart-search-ai
  */
 
 if (!defined('ABSPATH')) exit;

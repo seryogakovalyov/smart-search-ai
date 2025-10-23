@@ -88,8 +88,14 @@ jQuery(function ($) {
 
     var item = currentItems[index];
     if (item) {
-      $searchInput.val(item.value);
+      if (typeof item.value === "string") {
+        $searchInput.val(item.value);
+      }
       hideSuggestions();
+      if (item.url) {
+        window.location.href = item.url;
+        return;
+      }
       if (item.autoSubmit) {
         $searchInput.closest("form").trigger("submit");
       }
@@ -101,6 +107,7 @@ jQuery(function ($) {
     $list.empty();
 
     var words = data.suggestions || [];
+    var posts = data.posts || [];
     var queries = data.queries || [];
 
     words.forEach(function (item) {
@@ -112,9 +119,27 @@ jQuery(function ($) {
         '<li class="ssai-suggestions__item"><span class="ssai-suggestions__label"></span><span class="ssai-suggestions__meta"></span></li>'
       );
       $item.find(".ssai-suggestions__label").text(item.word);
-      $item
-        .find(".ssai-suggestions__meta")
-        .text(parseFloat(item.weight).toFixed(2));
+      $item.find(".ssai-suggestions__meta").text(parseFloat(item.weight).toFixed(2));
+      $list.append($item);
+    });
+
+    posts.forEach(function (item) {
+      var metaText = item.post_type_label || item.post_type || "";
+
+      currentItems.push({
+        value: item.title,
+        autoSubmit: false,
+        url: item.permalink || null,
+      });
+      var $item = $(
+        '<li class="ssai-suggestions__item ssai-suggestions__item--post"><span class="ssai-suggestions__label"></span><span class="ssai-suggestions__meta"></span></li>'
+      );
+      $item.find(".ssai-suggestions__label").text(item.title);
+      if (metaText) {
+        $item.find(".ssai-suggestions__meta").text(metaText);
+      } else {
+        $item.find(".ssai-suggestions__meta").remove();
+      }
       $list.append($item);
     });
 
@@ -127,7 +152,7 @@ jQuery(function ($) {
         '<li class="ssai-suggestions__item"><span class="ssai-suggestions__label"></span><span class="ssai-suggestions__meta"></span></li>'
       );
       $item.find(".ssai-suggestions__label").text(item.query);
-      $item.find(".ssai-suggestions__meta").text(item.count + "×");
+      $item.find(".ssai-suggestions__meta").text(item.count + '×');
       $list.append($item);
     });
 

@@ -244,21 +244,70 @@ class Smart_Search_Core
             )
         );
 
+        $post_args = [
+            's'                   => $term,
+            'posts_per_page'      => 5,
+            'post_status'         => 'publish',
+            'post_type'           => 'any',
+            'orderby'             => 'relevance',
+            'ignore_sticky_posts' => true,
+            'no_found_rows'       => true,
+        ];
+        $post_args = apply_filters('ssai_autocomplete_query_args', $post_args, $term);
+
+        $post_query       = new WP_Query($post_args);
+        $post_suggestions = [];
+
+        if (!empty($post_query->posts)) {
+            foreach ($post_query->posts as $post_item) {
+                $title = trim(wp_strip_all_tags(get_the_title($post_item)));
+                if ($title === '') {
+                    continue;
+                }
+                $title = wp_specialchars_decode($title, ENT_QUOTES);
+
+                $post_type_object = get_post_type_object($post_item->post_type);
+                $post_type_label = '';
+                if ($post_type_object && isset($post_type_object->labels->singular_name)) {
+                    $post_type_label = trim(wp_strip_all_tags($post_type_object->labels->singular_name));
+                }
+
+                $post_suggestions[] = [
+                    'id'               => $post_item->ID,
+                    'title'            => $title,
+                    'permalink'        => esc_url_raw(get_permalink($post_item)),
+                    'post_type'        => sanitize_key($post_item->post_type),
+                    'post_type_label'  => $post_type_label,
+                ];
+            }
+        }
+        $post_suggestions = apply_filters('ssai_autocomplete_post_results', $post_suggestions, $term, $post_query);
+
         $query_like = '%' . $wpdb->esc_like($term) . '%';
         $recent_queries = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT query, COUNT(*) as total
-                 FROM {$table_logs}
-                 WHERE query LIKE %s
-                 GROUP BY query
-                 ORDER BY total DESC, MAX(created_at) DESC
-                 LIMIT 5",
+             FROM {$table_logs}
+             WHERE query LIKE %s
+             GROUP BY query
+             ORDER BY total DESC, MAX(created_at) DESC
+             LIMIT 5",
                 $query_like
             )
         );
 
         wp_send_json_success([
             'suggestions' => array_map(fn($row) => ['word' => $row->word, 'weight' => (float) $row->weight], $word_results),
+            'posts'       => array_map(
+                fn($item) => [
+                    'id'              => (int) $item['id'],
+                    'title'           => $item['title'],
+                    'permalink'       => $item['permalink'],
+                    'post_type'       => $item['post_type'],
+                    'post_type_label' => $item['post_type_label'],
+                ],
+                $post_suggestions
+            ),
             'queries'     => array_map(fn($row) => ['query' => $row->query, 'count' => (int) $row->total], $recent_queries),
         ]);
     }
