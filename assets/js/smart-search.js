@@ -64,6 +64,52 @@ jQuery(function ($) {
   var currentIndex = -1;
   var currentItems = [];
   var requestId = 0;
+  var positionUpdateScheduled = false;
+  var suggestionGap = 4;
+
+  function applyListPosition() {
+    if (!$searchInput.length || !$container.length) {
+      return;
+    }
+
+    var offset = $searchInput.position();
+    if (!offset) {
+      return;
+    }
+
+    var inputWidth = $searchInput.outerWidth();
+    var inputHeight = $searchInput.outerHeight();
+
+    if (!inputWidth || !inputHeight) {
+      return;
+    }
+
+    $list.css({
+      left: offset.left + "px",
+      top: offset.top + inputHeight + suggestionGap + "px",
+      width: inputWidth + "px",
+      right: "auto",
+    });
+  }
+
+  function schedulePositionUpdate() {
+    if (positionUpdateScheduled) {
+      return;
+    }
+
+    positionUpdateScheduled = true;
+
+    var update = function () {
+      positionUpdateScheduled = false;
+      applyListPosition();
+    };
+
+    if (window.requestAnimationFrame) {
+      window.requestAnimationFrame(update);
+    } else {
+      setTimeout(update, 16);
+    }
+  }
 
   function hideSuggestions() {
     $list.hide();
@@ -93,6 +139,12 @@ jQuery(function ($) {
       }
       hideSuggestions();
       if (item.url) {
+        $.post(ajaxUrl, {
+          action: "ssai_register_click",
+          post_id: item.id,
+          query: searchQuery,
+          nonce: nonce,
+        });
         window.location.href = item.url;
         return;
       }
@@ -159,8 +211,8 @@ jQuery(function ($) {
     if (!currentItems.length) {
       $list.append(
         '<li class="ssai-suggestions__empty">' +
-          (ajaxData.i18n ? ajaxData.i18n.noSuggestions : "No suggestions") +
-          "</li>"
+        (ajaxData.i18n ? ajaxData.i18n.noSuggestions : "No suggestions") +
+        "</li>"
       );
     }
 
@@ -196,6 +248,7 @@ jQuery(function ($) {
   }
 
   $searchInput.on("input", function () {
+    schedulePositionUpdate();
     var term = $(this).val().trim();
     if (!term || term.length < 2) {
       hideSuggestions();
@@ -204,6 +257,22 @@ jQuery(function ($) {
 
     fetchSuggestions(term);
   });
+
+  $searchInput.on("focus", schedulePositionUpdate);
+  $(window).on("resize", schedulePositionUpdate);
+
+  if (window.ResizeObserver) {
+    try {
+      var resizeObserver = new window.ResizeObserver(function () {
+        schedulePositionUpdate();
+      });
+      resizeObserver.observe($searchInput[0]);
+    } catch (e) {
+      // Ignore ResizeObserver errors and fall back to window resize events.
+    }
+  }
+
+  schedulePositionUpdate();
 
   $searchInput.on("keydown", function (event) {
     if (!$list.is(":visible")) {

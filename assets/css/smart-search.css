@@ -8,22 +8,23 @@
 
 .ssai-suggestions {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 4px);
   left: 0;
-  right: 0;
   z-index: 9999;
-  margin: 4px 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.12);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
   border-radius: 4px;
-  min-width: 220px;
-  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+  max-width: none;
   max-height: 240px;
   overflow-y: auto;
   font-size: 14px;
+  box-sizing: border-box;
 }
 
 .ssai-suggestions__item {
