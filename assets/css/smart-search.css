@@ -1,0 +1,56 @@
+.ssai-autocomplete-wrapper {
+  position: relative;
+}
+
+.ssai-autocomplete-wrapper input[type="search"] {
+  box-sizing: border-box;
+}
+
+.ssai-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  min-width: 220px;
+  max-width: 100%;
+  max-height: 240px;
+  overflow-y: auto;
+  font-size: 14px;
+}
+
+.ssai-suggestions__item {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ssai-suggestions__item:hover,
+.ssai-suggestions__item.is-active {
+  background: #f2f5ff;
+}
+
+.ssai-suggestions__label {
+  color: #1d2327;
+  flex: 1;
+  margin-right: 8px;
+}
+
+.ssai-suggestions__meta {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.ssai-suggestions__empty {
+  padding: 10px 12px;
+  color: #6b7280;
+}
